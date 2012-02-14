@@ -14,7 +14,7 @@ of threading grows faster than that of gevent.
 ## Method
 
 We ran a number of background worker threads/greenlets in a pool configuration.
-The number of workers is the **concurrency**—this is the dependent variable.
+The number of workers is the **concurrency**—this is the independent variable.
 For gevent we use the included `gevent.pool.Pool` class; for threading we
 spawn a number of threads all pulling tasks from a shared instance of
 `Queue.Queue`.
