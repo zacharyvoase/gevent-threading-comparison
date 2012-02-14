@@ -74,6 +74,8 @@ displaying summarized data for each model and concurrency level. We plotted a
 chart to show how the overhead of threads and gevent changes with the number
 of concurrent workers.
 
+<img src="https://docs.google.com/a/zacharyvoase.com/spreadsheet/oimg?key=0AsuBtR4mF_kwdC00cTB3ZEgxbEVwRWJ0N19ER3ZPb0E&oid=1&zx=dahf936jcc15" alt="Charted and analysed data for this experiment." />
+
 
 ## Conclusions
 
