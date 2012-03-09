@@ -4,18 +4,20 @@ import sys
 import threading
 import time
 
-import gevent.pool
+import gevent.queue
 
 
-class ThreadPool(object):
+class WorkerPool(object):
+
+    Exit = NotImplemented
+    Queue = NotImplemented
+
+    def start_thread(self):
+        raise NotImplementedError
 
     def __init__(self, maxsize):
-        self.queue = Queue.Queue(maxsize)
-        self.threads = [threading.Thread(target=self._process)
-                        for i in xrange(maxsize)]
-        for t in self.threads:
-            t.daemon = True
-            t.start()
+        self.queue = self.Queue(maxsize)
+        self.threads = [self.start_thread() for i in xrange(maxsize)]
 
     def _process(self):
         """The main loop of a worker thread."""
@@ -23,7 +25,7 @@ class ThreadPool(object):
             func, args, kwargs = self.queue.get()
             try:
                 func(*args, **kwargs)
-            except SystemExit:
+            except self.Exit:
                 break
             except Exception, exc:
                 import traceback
@@ -37,11 +39,35 @@ class ThreadPool(object):
     def join(self):
         self.queue.join()
 
+    def die(self):
+        raise self.Exit
+
     def kill(self, block=True):
         for t in self.threads:
-            self.spawn(sys.exit)
+            self.spawn(self.die)
         if block:
             self.join()
+
+
+class ThreadPool(WorkerPool):
+
+    Exit = SystemExit
+    Queue = Queue.Queue
+
+    def start_thread(self):
+        t = threading.Thread(target=self._process)
+        t.daemon = True
+        t.start()
+        return t
+
+
+class GreenletPool(WorkerPool):
+
+    Exit = gevent.GreenletExit
+    Queue = gevent.queue.JoinableQueue
+
+    def start_thread(self):
+        return gevent.spawn(self._process)
 
 
 parser = argparse.ArgumentParser()
@@ -67,7 +93,7 @@ def main():
     args = parser.parse_args()
 
     if args.model == 'gevent':
-        pool = gevent.pool.Pool(args.concurrency)
+        pool = GreenletPool(args.concurrency)
         sleep = gevent.sleep
     else:
         pool = ThreadPool(args.concurrency)
