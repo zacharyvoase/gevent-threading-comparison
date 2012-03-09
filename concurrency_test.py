@@ -67,7 +67,9 @@ class GreenletPool(WorkerPool):
     Queue = gevent.queue.JoinableQueue
 
     def start_thread(self):
-        return gevent.spawn(self._process)
+        gl = gevent.spawn(self._process)
+        gevent.sleep(0)
+        return gl
 
 
 parser = argparse.ArgumentParser()
